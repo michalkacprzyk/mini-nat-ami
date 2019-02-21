@@ -1,0 +1,25 @@
+# mk (c) 2019
+---
+- name: Terminate EC2
+  ec2:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    region: "{{ aws_region }}"
+    instance_tags:
+       Name: "{{ ec2_name }}"
+    instance_ids: "{{ ec2_facts.instances.0.instance_id }}"
+    state: absent
+  when:  ec2_facts.instances.0 is defined
+ 
+- name: Delete security group rules
+  ec2_group:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    name: "{{ sec_group_name }}"
+    description: "{{ sec_group_name }}"
+    group_id: "{{ sec_group_id }}"
+    purge_rules: true

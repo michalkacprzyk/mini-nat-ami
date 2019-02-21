@@ -1,0 +1,53 @@
+# mk (c) 2019
+# Expects components created by usecase_create_playbook.yml
+---
+- name: Get AWS credentials
+  import_playbook: assume_sts_role_playbook.yml
+
+- name: Create EC2 with new AMI
+  hosts: localhost
+  connection: local
+  vars_files: vars.yml
+  vars:
+    ec2_role_mode: test
+    ec2_name: packer-test-ec2-ansible
+    ansibe_group: packer-test-instances
+  roles:
+    - ec2
+
+- name: Run tests
+  hosts: packer-test-instances
+  gather_facts: false
+  tasks:
+    - name: SSH access
+      wait_for_connection:
+        delay: 10
+        sleep: 10
+        timeout: 180
+
+    - name: root EBS size under 2.5G
+      shell: "test 2500000 -ge $(df --output=size / | tail -n 1)"
+ 
+    - name: NAT support 
+      become: true
+      command: "iptables -t nat -L"
+
+    - name: Package manager
+      become: true
+      yum:
+        name: "*"
+        state: latest
+
+- name: Terminate test EC2
+  hosts: localhost
+  connection: local
+  vars_files: vars.yml
+  tasks:
+    - ec2:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        security_token: "{{ security_token }}"
+
+        region: "{{ aws_region }}"
+        state: absent
+        instance_ids: "{{ test_ec2.tagged_instances.0.id }}"

@@ -1,0 +1,33 @@
+# mk (c) 2019
+# Sec Warning: Assuming we run on a trusted host
+#              some credentials do show in logs
+---
+- name: Obtain superpowers with AWS STS
+  vars:
+    aws_profile: "{{ aws_admin_profile }}"
+    aws_role: "{{ aws_admin_role }}"
+    mfa_serial_number: "arn:aws:iam::{{ aws_account_id }}:mfa/{{ aws_admin_profile }}"
+
+  import_playbook: assume_sts_role_playbook.yml
+
+- name: Create sandbox ssh keys, VPC and dedicated IAM credentials
+  hosts: localhost
+  connection: local
+
+  vars_files: vars.yml
+  vars:
+    aws_access_key: "{{ sts.sts_creds.access_key }}"
+    aws_secret_key: "{{ sts.sts_creds.secret_key }}"
+    security_token: "{{ sts.sts_creds.session_token }}"
+  tasks:
+    - name: Create ssh key pair using given local public key
+      ec2_key:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        security_token: "{{ security_token }}"
+    
+        name: "{{ ec2_ssh_keypair_name }}"
+        key_material: "{{ lookup('file', '{{ ec2_ssh_pub_key }}') }}"
+  roles:
+    - vpc-sandbox
+    - iam-sandbox

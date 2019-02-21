@@ -1,0 +1,34 @@
+# mk (c) 2019
+# Assume role with credentials from standard AWS file
+---
+- name: Assume role with STS
+  hosts: localhost
+  connection: local
+  vars_files: vars.yml
+  vars:
+    aws_profile: "{{ prefix }}user-ansible"
+    aws_role: "{{ prefix }}role-ansible" 
+    aws_access_key: "{{ lookup('ini', 'aws_access_key_id section={{ aws_profile }}
+                                        file={{ aws_credentials_file }}') }}"
+    aws_secret_key: "{{ lookup('ini', 'aws_secret_access_key section={{ aws_profile }}
+                                        file={{ aws_credentials_file  }}') }}"
+  tasks:
+    - assert:
+        that:
+          - mfa_token is defined
+        fail_msg: "Make sure you provide MFA code with -e mfa_token=123456"
+      when: mfa_serial_number is defined
+
+    - sts_assume_role:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        role_arn: "arn:aws:iam::{{ aws_account_id }}:role/{{ aws_role }}"
+        role_session_name: "{{ aws_role }}-ansible-session"
+        mfa_serial_number: "{{ mfa_serial_number | default(omit) }}"
+        mfa_token: "{{ mfa_token | default(omit) }}"
+        duration_seconds: 900
+      register: sts
+    - set_fact:
+       aws_access_key: "{{ sts.sts_creds.access_key }}"
+       aws_secret_key: "{{ sts.sts_creds.secret_key }}"
+       security_token: "{{ sts.sts_creds.session_token }}"

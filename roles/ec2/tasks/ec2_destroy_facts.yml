@@ -1,0 +1,14 @@
+# mk (c) 2019
+---
+- name: Get EC2 facts
+  ec2_instance_facts:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ ec2_name }}"
+      "subnet-id": "{{ subnet_id }}"
+      "instance.group-id": "{{ sec_group_id }}"
+  register: ec2_facts

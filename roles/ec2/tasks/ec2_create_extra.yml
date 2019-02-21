@@ -1,0 +1,15 @@
+# mk (c) 2019
+---
+- name: Create and attach additional EBS volume 
+  ec2_vol:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    region: "{{ aws_region }}"
+    instance: "{{ ec2.tagged_instances.0.id }}"
+    device_name: /dev/xvdb
+    tags:
+      Name: "{{ prefix }}extra-volume"
+    snapshot: "{{ ami_snap_id }}"
+    delete_on_termination: True

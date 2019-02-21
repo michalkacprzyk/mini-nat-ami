@@ -1,0 +1,13 @@
+# mk (c) 2019
+---
+aws_region: eu-central-1
+aws_account_id: 123456789012
+aws_credentials_file: "{{ ansible_user_dir }}/.aws/credentials"
+aws_admin_profile: auto_admin
+aws_admin_role: admin_role_for_auto_admin
+
+prefix: packer-
+target_ami_name: "{{ prefix }}ami"
+
+ec2_ssh_pub_key: "{{ ansible_user_dir }}/.ssh/id_rsa.pub"
+ec2_ssh_keypair_name: "{{ prefix }}ec2-ssh-keys-ansible"

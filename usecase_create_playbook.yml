@@ -1,0 +1,20 @@
+# mk (c) 2019
+# Expects components created by sandbox_create_playbook.yml
+---
+- name: Get AWS credentials
+  import_playbook: assume_sts_role_playbook.yml
+
+- name: Create EC2 for AMI creation
+  hosts: localhost
+  connection: local
+  vars_files: vars.yml
+  vars:
+    ec2_role_mode: create
+    ec2_name: packer-ec2-ansible
+  roles:
+    - ec2
+
+- name: Deploy packer and create AMI
+  hosts: packer-create-instances
+  roles:
+    - packer

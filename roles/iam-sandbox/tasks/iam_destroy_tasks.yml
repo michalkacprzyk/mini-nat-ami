@@ -1,0 +1,34 @@
+# mk (c) 2019
+---
+- name: Delete role "{{ iam_role_name }}"
+  iam_role:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    name: "{{ iam_role_name }}"
+    state: absent
+
+- name: Delete managed IAM policy "{{ iam_policy_name }}"
+  iam_managed_policy:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    policy_name: "{{ iam_policy_name }}"
+    state: absent
+
+- name: Delete IAM user "{{ iam_user_name }}"
+  iam:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    iam_type: user
+    name: "{{ iam_user_name }}"
+    state: absent
+
+- name: Delete user keys from "{{aws_credentials_file}}"
+  command: /usr/bin/python
+  args:
+    stdin: "{{ lookup('template', 'templates/remove_iam_keys.py') }}" 

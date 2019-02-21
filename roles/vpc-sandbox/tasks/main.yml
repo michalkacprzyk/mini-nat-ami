@@ -1,0 +1,11 @@
+# mk (c) 2019
+---
+- name: VPC Create mode block
+  block:
+    - include_tasks: vpc_create_tasks.yml
+  when: vpc_role_mode == "create"
+
+- name: VPC Destroy mode block
+  block:
+    - include_tasks: vpc_destroy_tasks.yml
+  when: vpc_role_mode == "destroy"

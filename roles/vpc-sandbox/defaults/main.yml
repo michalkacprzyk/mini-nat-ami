@@ -1,0 +1,13 @@
+# mk (c) 2019
+---
+vpc_role_mode: create
+aws_region: eu-central-1
+
+prefix: generic-
+vpc_name: "{{ prefix }}vpc-ansible"
+vpc_cidr: 10.71.0.0/16
+vpc_igw_name: "{{ prefix }}igw-ansible"
+vpc_pub_subnet_name: "{{ prefix }}pub-subnet-ansible"
+vpc_pub_subnet_cidr: 10.71.1.0/24
+vpc_pub_rt_name: "{{ prefix }}pub-rt-ansible"
+vpc_sec_group_name: "{{ prefix }}sec-group-ansible" 

@@ -1,0 +1,31 @@
+# mk (c) 2019
+# Sec Warning: Assuming we run on a trusted host
+#              some credentials do show in verbose logs
+---
+- name: Obtain superpowers with AWS STS
+  vars:
+    aws_profile: "{{ aws_admin_profile }}"
+    aws_role: "{{ aws_admin_role }}"
+    mfa_serial_number: "arn:aws:iam::{{ aws_account_id }}:mfa/{{ aws_admin_profile }}"
+
+  import_playbook: assume_sts_role_playbook.yml
+
+- name: Destroy VPC and IAM asks
+  hosts: localhost
+  connection: local
+  vars_files: vars.yml
+  vars:
+    vpc_role_mode: destroy
+    iam_role_mode: destroy
+  tasks:
+    - name: Delete SSH keys
+      ec2_key:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        security_token: "{{ security_token }}"
+    
+        name: "{{ ec2_ssh_keypair_name }}"
+        state: absent
+  roles:
+    - vpc-sandbox
+    - iam-sandbox

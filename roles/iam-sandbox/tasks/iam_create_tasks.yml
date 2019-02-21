@@ -1,0 +1,45 @@
+# mk (c) 2019
+---
+- name: Create IAM user "{{ iam_user_name }}"
+  iam:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    iam_type: user
+    name: "{{ iam_user_name }}"
+    state: present
+  register: user
+
+- name: Store new user keys in "{{ aws_credentials_file }}" (custom workaround)
+  command: /usr/bin/python
+  args:
+    stdin: "{{ lookup('template', 'templates/save_iam_keys.py') }}"
+
+- name: Create managed IAM policy "{{ iam_policy_name }}"
+  iam_managed_policy:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    policy_name: "{{ iam_policy_name }}"
+    policy: "{{ lookup( 'template', '{{ iam_policy_template }}') }}"
+    state: present
+  register: policy
+
+- name: Get user_arn (by a small workaround)
+  set_fact:
+    user_arn: "{{ policy.policy.arn | regex_replace('policy/.*', 'user/') }}{{ iam_user_name }}"
+
+- pause:
+    seconds: 5
+
+- name: Create role "{{ iam_role_name }}" and attach managed policy
+  iam_role:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    name: "{{ iam_role_name }}"
+    assume_role_policy_document: "{{ lookup('template', '{{ iam_role_assume_template }}') }}"
+    managed_policy: "{{ policy.policy.arn }}"

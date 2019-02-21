@@ -1,0 +1,13 @@
+# mk (c) 2019
+---
+- name: Get user AMI facts
+  ec2_ami_facts:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    aws_region: "{{ aws_region }}"   
+    owners: "{{ aws_account_id }}"
+    filters:
+      name: "*"
+  register: user_ami_facts

@@ -1,0 +1,11 @@
+# mk (c) 2019
+---
+packer_dir: "{{ ansible_user_dir }}/packer"
+download_url: https://www.packer.io/downloads.html
+pgp_key_id: 51852D87348FFC4C
+pgp_fingerprint: "91A6 E7F8 5D05 C656 30BE  F189 5185 2D87 348F FC4C"
+keyserver_hkp: hkp://keyserver.ubuntu.com:80 
+
+aws_region: eu-central-1
+packer_templates_pattern: "templates/packer_build_*"
+target_ami_prefix: packer-ami-

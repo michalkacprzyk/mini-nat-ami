@@ -1,0 +1,30 @@
+# mk (c) 2019
+---
+- name: Provision test EC2
+  ec2:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    aws_region: "{{ aws_region }}"   
+    vpc_subnet_id: "{{ subnet_id }}"
+    key_name: "{{ ec2_ssh_keypair_name }}"
+    group: "{{ sec_group_name }}"
+    instance_profile_name: "{{ iam_profile_name }}"
+    instance_type: "{{ ec2_type }}"
+    image: "{{ user_ami_facts.images[-1].image_id }}" # just a single mostrecent for now
+    wait: true
+    instance_tags:
+       Name: "{{ ec2_name }}"
+    # Keep exact_count running
+    count_tag: 
+      Name: "{{ ec2_name }}"
+    exact_count: "{{ ec2_keep_running_count }}"
+  register: test_ec2
+
+- name: Add new EC2 to in-memory group
+  add_host:
+    hostname: "{{ test_ec2.tagged_instances.0.public_ip }}"
+    groupname: "{{ ansible_group }}"
+    ansible_user: "{{ ec2_ssh_user }}"
+    ansible_ssh_extra_args: "{{ ansible_ssh_args }}" 

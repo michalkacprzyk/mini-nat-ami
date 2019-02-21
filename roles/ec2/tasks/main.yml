@@ -1,0 +1,30 @@
+# mk (c) 2019
+---
+- import_tasks: ec2_general_facts.yml
+
+- name: EC2 Create mode block
+  block:
+    - include_tasks: ec2_create_facts.yml
+    - include_tasks: ec2_create_tasks.yml
+    
+    - include_tasks: "{{ item }}"
+      with_fileglob: tasks/ec2_create_extra*.yml
+  when: ec2_role_mode == "create"
+
+- name: EC2 Test mode block
+  block:
+    - include_tasks: ec2_test_facts.yml
+    - include_tasks: ec2_test_tasks.yml
+    
+    - include_tasks: "{{ item }}"
+      with_fileglob: tasks/ec2_test_extra*.yml
+  when: ec2_role_mode == "test"
+
+- name: EC2 Destroy mode block
+  block:
+    - include_tasks: ec2_destroy_facts.yml
+    - include_tasks: ec2_destroy_tasks.yml
+    
+    - include_tasks: "{{ item }}"
+      with_fileglob: tasks/ec2_destroy_extra*.yml
+  when: ec2_role_mode == "destroy"

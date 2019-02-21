@@ -1,0 +1,65 @@
+# mk (c) 2019
+---
+- name: Create VPC "{{ vpc_name }}"
+  ec2_vpc_net:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    aws_region: "{{ aws_region }}"   
+    cidr_block: "{{ vpc_cidr }}"
+    name: "{{ vpc_name }}"
+  register: vpc
+
+- name: Create internet gateway "{{ vpc_igw_name }}"
+  ec2_vpc_igw:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    region: "{{ aws_region }}"
+    vpc_id: "{{ vpc.vpc.id }}"
+    tags:
+      Name: "{{ vpc_igw_name }}"
+    state: present
+  register: igw
+
+- name: Create public subnet "{{ vpc_pub_subnet_name }}"
+  ec2_vpc_subnet:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    state: present
+    vpc_id: "{{ vpc.vpc.id }}"
+    cidr: "{{ vpc_pub_subnet_cidr }}"
+    map_public: yes
+    resource_tags:
+      Name: "{{ vpc_pub_subnet_name }}"
+  register: ps
+
+- name: Create public subnet route table "{{ vpc_pub_rt_name }}"
+  ec2_vpc_route_table:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    vpc_id: "{{ vpc.vpc.id }}"
+    tags:
+      Name: "{{ vpc_pub_rt_name }}"
+    subnets:
+      - "{{ ps.subnet.id }}"
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ igw.gateway_id }}"
+
+- name: Create security group "{{ vpc_sec_group_name }}"
+  ec2_group:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    vpc_id: "{{ vpc.vpc.id }}"
+    name: "{{ vpc_sec_group_name }}"
+    description: "{{ vpc_sec_group_name }}"
+  register: sg

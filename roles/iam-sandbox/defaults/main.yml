@@ -1,0 +1,14 @@
+# mk (c) 2019
+---
+iam_role_mode: create
+aws_region: eu-central-1
+
+prefix: generic-
+iam_user_name: "{{ prefix }}user-ansible"
+iam_role_name: "{{prefix}}role-ansible"
+iam_role_assume_template: "templates/{{ prefix }}role-assume-policy.json"
+iam_policy_name: "{{ prefix }}policy-ansible"
+
+iam_policy_template: "templates/{{ prefix }}restricted-policy.json"
+iam_allow_sec_group_id: "{{ sg.group_id }}"
+iam_allow_instance_type: "*.micro"

@@ -1,0 +1,68 @@
+# mk (c) 2019
+---
+- name: Add rule to security group permining SSH from this host 
+  ec2_group:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    vpc_id: "{{ vpc_id }}"
+    group_id: "{{ sec_group_id }}"
+    name: "{{ sec_group_name }}"
+    description: "{{ sec_group_name }}"
+    rules:
+      - proto: tcp
+        ports:
+        - 22
+        cidr_ip: "{{ master_ip }}/32"
+        rule_desc: allow ssh from master IP
+
+- name: Provision EC2
+  ec2:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    aws_region: "{{ aws_region }}"   
+    vpc_subnet_id: "{{ subnet_id }}"
+    key_name: "{{ ec2_ssh_keypair_name }}"
+    group: "{{ sec_group_name }}"
+    instance_profile_name: "{{ iam_profile_name }}"
+    instance_type: "{{ ec2_type }}"
+    image: "{{ ami_id }}"
+    wait: true
+    instance_tags:
+       Name: "{{ ec2_name }}"
+    # Keep exact_count running
+    count_tag:
+       Name: "{{ ec2_name }}"
+    exact_count: "{{ ec2_keep_running_count }}"
+  register: ec2
+
+- name: Tag the root EC2 volume
+  ec2_tag:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    region: "{{ aws_region }}"   
+    resource: "{{ ec2.tagged_instances.0.block_device_mapping['/dev/xvda'].volume_id }}"
+    state: present
+  args:
+    tags:
+      Name: "{{ ec2_root_vol_name }}"
+
+- name: Confirm ansibe has SSH access to the new EC2
+  wait_for_connection:
+    delay: 10
+    sleep: 10
+    timeout: 180
+  loop:
+    - "{{ ec2.tagged_instances }}"
+
+- name: Add new EC2 to in-memory group
+  add_host:
+    hostname: "{{ ec2.tagged_instances.0.public_ip }}"
+    groupname: "{{ ansible_group }}"
+    ansible_user: "{{ ec2_ssh_user }}"
+    ansible_ssh_extra_args: "{{ ansible_ssh_args }}" 

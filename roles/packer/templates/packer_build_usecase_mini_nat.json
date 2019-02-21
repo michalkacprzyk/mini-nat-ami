@@ -1,0 +1,52 @@
+{
+  "_comment": "mk (c) 2019",
+  "builders": [{
+    "type": "amazon-chroot",
+
+    "region": "{{ aws_region }}",
+
+    "source_ami_filter": {
+      "filters": {
+        "virtualization-type": "hvm",
+        "name": "amzn-ami-minimal-*",
+        "root-device-type": "ebs"
+      },
+      "owners": ["amazon"],
+      "most_recent": true
+    },
+
+    "root_volume_size": 2,
+    "root_volume_type": "gp2",
+    "root_volume_tags": {
+       "Name": "packer-tmp-root-volume"
+    },
+
+    "snapshot_tags": {
+       "Name": "packer-created-snapshot"
+    },
+
+    "ami_virtualization_type": "hvm",
+    "ami_name": "{{ target_ami_prefix }}mini-nat-{{ '{{timestamp}}' }}",
+    "tags": {
+       "Name": "packer-created-ami"
+    }
+  }],
+
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+          "echo [i] Mounting source - nat - filesystem",
+          "mkdir /mnt/nat-ebs",
+          "mount /dev/xvdb1 /mnt/nat-ebs/",
+          "echo [i] Installing rsync",
+          "yum install rsync -y && yum clean all",
+          "echo [i] Synchronizing entire NAT filesystem to the smaller volume",
+          "rsync -aHx --exclude /proc --exclude /sys --exclude /dev --exclude /mnt/nat-ebs --delete /mnt/nat-ebs/ /",
+          "echo [i] Umounting source filesystem",
+          "umount /mnt/nat-ebs && rmdir /mnt/nat-ebs"
+      ]
+    }
+  ]
+
+}

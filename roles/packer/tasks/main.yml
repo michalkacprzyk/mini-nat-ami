@@ -1,0 +1,34 @@
+# mk (c) 2019
+---
+- name: Create needed directores
+  file:
+    dest: "{{ item }}"
+    state: directory 
+  with_items:
+    - "{{ packer_dir }}"
+    - "{{ packer_dir }}/files"
+
+- name: Prepare packer download script template
+  template:
+    src: templates/get_packer.sh
+    dest: "{{ packer_dir }}"
+    mode: 0755
+  register: scrpt
+
+- name: Execute the download script
+  command: "{{ scrpt.dest }}"
+  args:
+    creates: "{{ packer_dir }}/packer"
+
+- name: Prepare packer JSON build file templates
+  template:
+    src: "{{ item }}"
+    dest: "{{ packer_dir }}/files"
+    mode: 0600
+  with_fileglob: "{{ packer_templates_pattern }}"
+  register: bld
+
+- name: Execute packer build
+  command: "{{ packer_dir }}/packer build {{ item.dest }}"
+  become: true
+  with_items: "{{ bld.results }}"

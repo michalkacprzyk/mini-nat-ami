@@ -1,0 +1,15 @@
+# mk (c) 2019
+# Expects components created by usecase_create_playbook.yml
+---
+- name: Get AWS credentials
+  import_playbook: assume_sts_role_playbook.yml
+
+- name: Destroy EC2
+  hosts: localhost
+  connection: local
+  vars_files: vars.yml
+  vars:
+    ec2_role_mode: destroy
+    ec2_name: packer-ec2-ansible
+  roles:
+    - ec2

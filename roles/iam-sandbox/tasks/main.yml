@@ -1,0 +1,11 @@
+# mk (c) 2019
+---
+- name: IAM Create mode block
+  block:
+    - include_tasks: iam_create_tasks.yml
+  when: iam_role_mode == "create"
+
+- name: IAM Destroy mode block
+  block:
+    - include_tasks: iam_destroy_tasks.yml
+  when: iam_role_mode == "destroy"

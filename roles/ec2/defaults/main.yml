@@ -1,0 +1,17 @@
+# mk (c) 2019
+---
+ec2_role_mode: create
+prefix: generic-
+public_ip_url: http://checkip.amazonaws.com
+
+ec2_ssh_keypair_name: "{{ prefix }}ec2-ssh-keys-ansible"
+ec2_ssh_user: ec2-user
+ec2_name: "{{ prefix }}ec2-ansible"
+ec2_root_vol_name: "{{ prefix }}ec2-root-vol-ansible"
+ec2_keep_running_count: 1
+ec2_type: t2.micro
+ec2_ami_name_filter: amzn-ami-vpc-nat-*
+iam_profile_name: "{{ prefix }}role-ansible"
+
+ansible_group: "{{ prefix }}{{ ec2_role_mode }}-instances"
+ansible_ssh_args: -o StrictHostKeyChecking=no 

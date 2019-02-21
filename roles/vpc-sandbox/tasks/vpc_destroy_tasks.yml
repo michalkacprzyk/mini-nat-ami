@@ -1,0 +1,72 @@
+# mk (c) 2019
+---
+- name: Get VPC facts for "{{ vpc_name }}"
+  ec2_vpc_net_facts:
+    aws_access_key: "{{ aws_access_key }}"
+    aws_secret_key: "{{ aws_secret_key }}"
+    security_token: "{{ security_token }}"
+
+    filters:
+      "tag:Name": "{{ vpc_name }}"
+      cidr: "{{ vpc_cidr }}"
+  register: vpc_facts
+
+- block:
+    - name: Destroy security group "{{ vpc_sec_group_name }}"
+      ec2_group:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        security_token: "{{ security_token }}"
+    
+        vpc_id: "{{ vpc_facts.vpcs.0.vpc_id }}"
+        name: "{{ vpc_sec_group_name }}"
+        description: "{{ vpc_sec_group_name }}"
+        state: absent
+    
+    - name: Destroy public route table "{{ vpc_pub_rt_name }}"
+      ec2_vpc_route_table:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        security_token: "{{ security_token }}"
+    
+        vpc_id: "{{ vpc_facts.vpcs.0.vpc_id }}"
+        tags:
+          Name: "{{ vpc_pub_rt_name }}"
+        lookup: tag
+        state: absent
+    
+    - name: Destroy public subnet "{{ vpc_pub_subnet_name }}"
+      ec2_vpc_subnet:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        security_token: "{{ security_token }}"
+    
+        vpc_id: "{{ vpc_facts.vpcs.0.vpc_id }}"
+        cidr: "{{ vpc_pub_subnet_cidr }}"
+        resource_tags:
+          Name: "{{ vpc_pub_subnet_name }}"
+        state: absent
+    
+    - name: Destroy internet gateway "{{ vpc_igw_name }}"
+      ec2_vpc_igw:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        security_token: "{{ security_token }}"
+    
+        region: "{{ aws_region }}"
+        vpc_id: "{{ vpc_facts.vpcs.0.vpc_id }}"
+        tags:
+          Name: "{{ vpc_igw_name }}"
+        state: absent
+    
+    - name: Destroy VPC "{{ vpc_name }}"
+      ec2_vpc_net:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        security_token: "{{ security_token }}"
+      
+        aws_region: "{{ aws_region }}"   
+        name: "{{ vpc_name }}"
+        cidr_block: "{{ vpc_cidr }}"
+        state: absent
+  when: vpc_facts.vpcs.0 is defined
