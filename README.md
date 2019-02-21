@@ -8,7 +8,7 @@ Automated creation of a minimal **AWS EC2 AMI** with **NAT** support.
 
 In the official **NAT** instance **AMI** provided by **AWS**,
 the root **EBS** volume is **8GB** while the actual size of all files is well under **2GB**. 
-Using standard methods it is not possible to decrease size of a **EBS** volume while keeping the entire file-system intact.
+Using standard methods it is not possible to decrease size of an **EBS** volume while keeping the entire file-system intact.
 
 The code is also quite generic and can be adjusted to help with different use-cases.
 
